@@ -169,12 +169,12 @@
             animation: blink 1.5s infinite;
         }
 
-        /* AI Floating Badge */
+        /* AI Floating Badge - HIGHEST z-index to stay above ALL popups */
         .ai-monitor-badge {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: rgba(8, 12, 24, 0.92);
+            background: rgba(8, 12, 24, 0.95);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(0, 242, 254, 0.6);
             border-radius: 18px;
@@ -182,7 +182,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            z-index: 3000;
+            z-index: 99999;
             box-shadow: 0 0 30px rgba(0, 242, 254, 0.35), inset 0 0 15px rgba(0, 242, 254, 0.15);
             overflow: hidden;
             animation: floatWidget 4s infinite ease-in-out;
@@ -437,7 +437,7 @@
             transform: scale(1.05);
         }
 
-        /* Modal Overlay Styles (z-index 4000 to keep above page elements) */
+        /* Modal Overlay Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -878,9 +878,9 @@
             font-size: 0.8rem;
         }
 
-        /* ===== NEW: AdBlocker Detection Modal Styles ===== */
+        /* AdBlocker Detection Modal Styles */
         #adBlockModal {
-            z-index: 9999; /* Highest priority to override everything */
+            z-index: 99999;
             backdrop-filter: blur(15px);
             background: rgba(0, 0, 0, 0.95);
         }
@@ -951,7 +951,7 @@
 
     <div class="bg-glow"></div>
 
-    <!-- AI Monitoring Badge -->
+    <!-- AI Monitoring Badge - z-index 99999 to stay above everything -->
     <div class="ai-monitor-badge">
         <div class="ai-avatar">
             <i class="fa-solid fa-microchip"></i>
@@ -1204,13 +1204,13 @@
         </div>
     </div>
 
-    <!-- ===== NEW: AdBlocker Detection Modal ===== -->
+    <!-- AdBlocker Detection Modal - z-index 99999 -->
     <div class="modal-overlay" id="adBlockModal">
         <div class="modal-box">
             <i class="fa-solid fa-shield-virus adblock-icon"></i>
             <h3 style="color: #ff4d4d; font-family: 'Orbitron', sans-serif;">অ্যাড ব্লকার ডিটেক্টেড!</h3>
             <p style="font-size: 0.9rem; color: #e0e0e0; margin-top: 10px; line-height: 1.5;">
-                ফ্রি ডায়মন্ড নিতে হলে অবশ্যই আপনাকে আপনার <b>অ্যাড ব্লকার (Ad Blocker)</b> বন্ধ করতে হবে। আমাদের স্পনসর অ্যাডের মাধ্যমেই আমরা আপনাকে ফ্রি ডায়মন্ড দিয়ে থাকি।
+                ফ্রি ডায়মন্ড নিতে হলে অবশ্যই আপনাকে আপনার <b>অ্যাড ব্লকার (Ad Blocker) / DNS / VPN</b> বন্ধ করতে হবে। আমাদের স্পনসর অ্যাডের মাধ্যমেই আমরা আপনাকে ফ্রি ডায়মন্ড দিয়ে থাকি।
             </p>
 
             <div class="instruction-box">
@@ -1278,7 +1278,7 @@
             "MONTHLY": 20
         };
 
-        const COOLDOWN_TIME_MS = 5 * 60 * 60 * 1000; // 5 Hours in MS
+        const COOLDOWN_TIME_MS = 5 * 60 * 60 * 1000;
 
         // Modal Elements
         const cooldownModal = document.getElementById('cooldownModal');
@@ -1327,7 +1327,8 @@
         let requiredAds = parseInt(sessionStorage.getItem('rd_req_ads')) || 0;
         let watchedAds = parseInt(sessionStorage.getItem('rd_watched_ads')) || 0;
 
-        function saveSessionState(activeModalId = "") {
+        function saveSessionState(activeModalId) {
+            activeModalId = activeModalId || "";
             sessionStorage.setItem('rd_active_modal', activeModalId);
             sessionStorage.setItem('rd_pack', currentPack);
             sessionStorage.setItem('rd_uid', currentUid);
@@ -1344,12 +1345,10 @@
         }
 
         function getRemainingCooldown() {
-            const lastClaimTimestamp = localStorage.getItem('rd_last_claim_timestamp');
+            var lastClaimTimestamp = localStorage.getItem('rd_last_claim_timestamp');
             if (!lastClaimTimestamp) return 0;
-
-            const now = Date.now();
-            const timePassed = now - parseInt(lastClaimTimestamp, 10);
-            
+            var now = Date.now();
+            var timePassed = now - parseInt(lastClaimTimestamp, 10);
             if (timePassed < COOLDOWN_TIME_MS) {
                 return COOLDOWN_TIME_MS - timePassed;
             }
@@ -1358,150 +1357,137 @@
 
         function closeAllModals() {
             document.body.classList.remove('modal-open');
-            cooldownModal.classList.remove('active');
-            uidModal.classList.remove('active');
-            guideModal.classList.remove('active');
-            taskModal.classList.remove('active');
-            summaryModal.classList.remove('active');
+            if (cooldownModal) cooldownModal.classList.remove('active');
+            if (uidModal) uidModal.classList.remove('active');
+            if (guideModal) guideModal.classList.remove('active');
+            if (taskModal) taskModal.classList.remove('active');
+            if (summaryModal) summaryModal.classList.remove('active');
         }
 
         function openModal(modalElement) {
             closeAllModals();
             document.body.classList.add('modal-open');
-            modalElement.classList.add('active');
+            if (modalElement) modalElement.classList.add('active');
         }
 
         // Restore state if browser reloads
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedModal = sessionStorage.getItem('rd_active_modal');
+        window.addEventListener('DOMContentLoaded', function() {
+            var savedModal = sessionStorage.getItem('rd_active_modal');
             if (savedModal === 'taskModal' && currentUid && currentPack) {
                 taskPackText.innerText = currentPack;
                 totalAdsCount.innerText = requiredAds;
                 updateTaskUI();
                 openModal(taskModal);
             } else if (savedModal === 'guideModal' && currentUid && currentPack) {
-                guideUidTag.innerText = `UID: ${currentUid}`;
+                guideUidTag.innerText = 'UID: ' + currentUid;
                 guideDynamicAdsCount.innerText = requiredAds;
                 openModal(guideModal);
             }
         });
 
         // Click Claim Button with Cooldown Validation
-        claimButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const remainingMs = getRemainingCooldown();
+        claimButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                var remainingMs = getRemainingCooldown();
                 if (remainingMs > 0) {
-                    const hoursLeft = Math.floor(remainingMs / (1000 * 60 * 60));
-                    const minsLeft = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                    
-                    let timeText = "";
-                    if (hoursLeft > 0) timeText += `${hoursLeft} ঘণ্টা `;
-                    timeText += `${minsLeft} মিনিট`;
-
+                    var hoursLeft = Math.floor(remainingMs / (1000 * 60 * 60));
+                    var minsLeft = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                    var timeText = "";
+                    if (hoursLeft > 0) timeText += hoursLeft + ' ঘণ্টা ';
+                    timeText += minsLeft + ' মিনিট';
                     cooldownTimeText.innerText = timeText;
                     openModal(cooldownModal);
                     return;
                 }
-
-                const card = e.target.closest('.diamond-card');
+                var card = e.target.closest('.diamond-card');
                 currentPack = card.querySelector('h3').innerText.trim();
                 selectedPackText.innerText = currentPack;
-                
                 uidErrorMsg.style.display = 'none';
                 playerUidInput.style.borderColor = 'rgba(0, 242, 254, 0.3)';
                 playerUidInput.value = '';
-
                 openModal(uidModal);
                 saveSessionState('uidModal');
             });
         });
 
         // Close Buttons Event
-        closeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+        closeBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
                 closeAllModals();
                 clearSessionState();
             });
         });
 
         // Back Buttons Logic
-        backToUidBtn.addEventListener('click', () => {
-            openModal(uidModal);
-            saveSessionState('uidModal');
-        });
-
-        backToGuideBtn.addEventListener('click', () => {
-            openModal(guideModal);
-            saveSessionState('guideModal');
-        });
+        if (backToUidBtn) {
+            backToUidBtn.addEventListener('click', function() {
+                openModal(uidModal);
+                saveSessionState('uidModal');
+            });
+        }
+        if (backToGuideBtn) {
+            backToGuideBtn.addEventListener('click', function() {
+                openModal(guideModal);
+                saveSessionState('guideModal');
+            });
+        }
 
         // Step 1: Submit UID & Validate
-        uidForm.addEventListener('submit', (e) => {
+        uidForm.addEventListener('submit', function(e) {
             e.preventDefault();
             currentUid = playerUidInput.value.trim();
-            
             if (currentUid.length < 8) {
                 uidErrorMsg.style.display = 'block';
                 playerUidInput.style.borderColor = '#ff4d4d';
                 return;
             }
-
             uidErrorMsg.style.display = 'none';
             playerUidInput.style.borderColor = 'rgba(0, 242, 254, 0.3)';
-
             requiredAds = packAdsMap[currentPack] || 5;
             watchedAds = 0;
-
-            guideUidTag.innerText = `UID: ${currentUid}`;
+            guideUidTag.innerText = 'UID: ' + currentUid;
             guideDynamicAdsCount.innerText = requiredAds;
-            
             openModal(guideModal);
             saveSessionState('guideModal');
         });
 
         // Step 2: Guide Modal to Task Modal
-        startTaskBtn.addEventListener('click', () => {
+        startTaskBtn.addEventListener('click', function() {
             taskPackText.innerText = currentPack;
             totalAdsCount.innerText = requiredAds;
             updateTaskUI();
-
             openModal(taskModal);
             saveSessionState('taskModal');
         });
 
         // Update Progress UI
         function updateTaskUI() {
-            progressText.innerText = `${watchedAds} / ${requiredAds} Completed`;
-            const percentage = (watchedAds / requiredAds) * 100;
-            progressFill.style.width = `${percentage}%`;
-
+            progressText.innerText = watchedAds + ' / ' + requiredAds + ' Completed';
+            var percentage = (watchedAds / requiredAds) * 100;
+            progressFill.style.width = percentage + '%';
             if (watchedAds < requiredAds) {
-                adActionBtn.innerHTML = `<i class="fa-solid fa-play"></i> WATCH AD (${watchedAds + 1}/${requiredAds})`;
-                adActionBtn.style.background = "linear-gradient(45deg, #00f2fe, #4facfe)";
+                adActionBtn.innerHTML = '<i class="fa-solid fa-play"></i> WATCH AD (' + (watchedAds + 1) + '/' + requiredAds + ')';
+                adActionBtn.style.background = 'linear-gradient(45deg, #00f2fe, #4facfe)';
             } else {
-                adActionBtn.innerHTML = `<i class="fa-solid fa-gem"></i> আপনার ডায়মন্ড নিন`;
-                adActionBtn.style.background = "linear-gradient(45deg, #00ff41, #00b32c)";
+                adActionBtn.innerHTML = '<i class="fa-solid fa-gem"></i> আপনার ডায়মন্ড নিন';
+                adActionBtn.style.background = 'linear-gradient(45deg, #00ff41, #00b32c)';
             }
         }
 
         // Step 3: Handle Sequential Ad Links
-        adActionBtn.addEventListener('click', (e) => {
+        adActionBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (watchedAds < requiredAds) {
-                const currentAdLink = AD_LINKS[watchedAds % AD_LINKS.length];
-                
+                var currentAdLink = AD_LINKS[watchedAds % AD_LINKS.length];
                 watchedAds++;
                 saveSessionState('taskModal');
                 updateTaskUI();
-                
                 window.open(currentAdLink, '_blank');
             } else {
                 localStorage.setItem('rd_last_claim_timestamp', Date.now().toString());
-
                 sumUid.innerText = currentUid;
                 sumPlan.innerText = currentPack;
-                sumAds.innerText = `${watchedAds} / ${requiredAds}`;
-
+                sumAds.innerText = watchedAds + ' / ' + requiredAds;
                 openModal(summaryModal);
                 clearSessionState();
             }
@@ -1509,395 +1495,123 @@
 
         // Share Helpers
         function getShareText() {
-            return `আমি RD FREE DIAMOND সাইট থেকে ফ্রিতে ${currentPack || 'ডায়মন্ড'} পেয়েছি! আপনিও নিতে ভিজিট করুন: `;
+            return 'আমি RD FREE DIAMOND সাইট থেকে ফ্রিতে ' + (currentPack || 'ডায়মন্ড') + ' পেয়েছি! আপনিও নিতে ভিজিট করুন: ';
         }
-
         function getShareUrl() {
             return window.location.href;
         }
 
         // Main Share Now Button
-        shareNowBtn.addEventListener('click', () => {
+        shareNowBtn.addEventListener('click', function() {
             if (navigator.share) {
-                navigator.share({
-                    title: 'RD FREE DIAMOND',
-                    text: getShareText(),
-                    url: getShareUrl()
-                }).catch(() => {});
+                navigator.share({ title: 'RD FREE DIAMOND', text: getShareText(), url: getShareUrl() }).catch(function() {});
             } else {
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(getShareText() + getShareUrl())}`, '_blank');
+                window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(getShareText() + getShareUrl()), '_blank');
             }
         });
 
         // Social Platform Share Handlers
-        shareWhatsapp.addEventListener('click', () => {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(getShareText() + getShareUrl())}`, '_blank');
-        });
-
-        shareFacebook.addEventListener('click', () => {
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
-        });
-
-        shareMessenger.addEventListener('click', () => {
-            window.open(`fb-messenger://share/?link=${encodeURIComponent(getShareUrl())}`, '_blank');
-        });
-
-        shareTelegram.addEventListener('click', () => {
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareText())}`, '_blank');
-        });
-
-        shareTwitter.addEventListener('click', () => {
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText())}&url=${encodeURIComponent(getShareUrl())}`, '_blank');
-        });
-
-        shareCopy.addEventListener('click', () => {
-            navigator.clipboard.writeText(getShareUrl()).then(() => {
-                alert("লিঙ্ক কপি করা হয়েছে!");
-            });
-        });
+        shareWhatsapp.addEventListener('click', function() { window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(getShareText() + getShareUrl()), '_blank'); });
+        shareFacebook.addEventListener('click', function() { window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(getShareUrl()), '_blank'); });
+        shareMessenger.addEventListener('click', function() { window.open('fb-messenger://share/?link=' + encodeURIComponent(getShareUrl()), '_blank'); });
+        shareTelegram.addEventListener('click', function() { window.open('https://t.me/share/url?url=' + encodeURIComponent(getShareUrl()) + '&text=' + encodeURIComponent(getShareText()), '_blank'); });
+        shareTwitter.addEventListener('click', function() { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(getShareText()) + '&url=' + encodeURIComponent(getShareUrl()), '_blank'); });
+        shareCopy.addEventListener('click', function() { navigator.clipboard.writeText(getShareUrl()).then(function() { alert('লিঙ্ক কপি করা হয়েছে!'); }); });
 
         // ============================================
-        // ADVANCED AD BLOCKER DETECTION SYSTEM
-        // Detects all types of ad blockers, VPNs, and ad blocking extensions
-        // Replaces the old simple detection system
+        // ULTIMATE REAL-TIME ADBLOCKER DETECTION SYSTEM
+        // Checks every 1 second + uses multiple methods
         // ============================================
-        
         (function() {
-            let adBlockerDetected = false;
+            var adBlockModal = document.getElementById('adBlockModal');
             
-            // Multiple detection methods
-            const detectionMethods = {
-                // Method 1: Bait element detection (classic method)
-                baitElement: function() {
-                    return new Promise((resolve) => {
-                        const bait = document.createElement('div');
-                        bait.innerHTML = '&nbsp;';
-                        bait.className = 'adsbox pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links ad-text adSense adBlock ad-placement ad-banner';
-                        bait.style.cssText = 'position: absolute; top: -999px; left: -999px; width: 1px; height: 1px;';
-                        document.body.appendChild(bait);
-                        
-                        setTimeout(() => {
-                            const isBlocked = bait.offsetParent === null || 
-                                            bait.offsetHeight === 0 || 
-                                            bait.offsetWidth === 0 ||
-                                            window.getComputedStyle(bait).display === 'none' ||
-                                            window.getComputedStyle(bait).visibility === 'hidden';
-                            document.body.removeChild(bait);
-                            resolve(isBlocked);
-                        }, 100);
-                    });
-                },
-                
-                // Method 2: Check if common ad scripts are blocked
-                scriptDetection: function() {
-                    return new Promise((resolve) => {
-                        const testScript = document.createElement('script');
-                        testScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-                        testScript.onerror = () => resolve(true);
-                        testScript.onload = () => resolve(false);
-                        testScript.async = true;
-                        document.head.appendChild(testScript);
-                        
-                        setTimeout(() => {
-                            if (testScript.parentNode) {
-                                document.head.removeChild(testScript);
-                            }
-                            resolve(false);
-                        }, 2000);
-                    });
-                },
-                
-                // Method 3: Check for common ad blocker global variables
-                variableDetection: function() {
-                    const blockerIndicators = [
-                        'blockAdBlock',
-                        'canRunAds',
-                        'bait',
-                        'adBlock',
-                        'adblock',
-                        'adb',
-                        'ga',
-                        'adblocker',
-                        '__adblocker',
-                        'blockAdBlockPlus'
-                    ];
-                    
-                    for (let indicator of blockerIndicators) {
-                        if (typeof window[indicator] !== 'undefined') {
-                            return true;
-                        }
-                    }
-                    return false;
-                },
-                
-                // Method 4: Network request detection
-                networkDetection: function() {
-                    return new Promise((resolve) => {
-                        const testUrl = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-                        fetch(testUrl, { method: 'HEAD', mode: 'no-cors' })
-                            .then(() => resolve(false))
-                            .catch(() => resolve(true));
-                        
-                        setTimeout(() => resolve(false), 2000);
-                    });
-                },
-                
-                // Method 5: CSS property detection
-                cssDetection: function() {
-                    return new Promise((resolve) => {
-                        const testDiv = document.createElement('div');
-                        testDiv.id = 'adblock-detection-test';
-                        testDiv.style.cssText = 'position: fixed; top: -999px; left: -999px; width: 10px; height: 10px; background: #000;';
-                        document.body.appendChild(testDiv);
-                        
-                        setTimeout(() => {
-                            const computed = window.getComputedStyle(testDiv);
-                            const isBlocked = computed.display === 'none' || 
-                                            computed.visibility === 'hidden' ||
-                                            computed.opacity === '0' ||
-                                            testDiv.offsetHeight === 0;
-                            document.body.removeChild(testDiv);
-                            resolve(isBlocked);
-                        }, 100);
-                    });
-                }
-            };
-            
-            // Run all detection methods
-            async function runDetection() {
-                const results = {
-                    bait: false,
-                    script: false,
-                    variable: false,
-                    network: false,
-                    css: false
-                };
-                
+            // Detection Method 1: DOM Bait Element
+            function checkBaitElement() {
+                var adTest = document.getElementById('wrapAdTest');
+                if (!adTest) return true;
                 try {
-                    results.bait = await detectionMethods.baitElement();
-                    results.variable = detectionMethods.variableDetection();
-                    
-                    if (results.bait || results.variable) {
+                    var style = window.getComputedStyle(adTest);
+                    if (style.display === 'none' || style.visibility === 'hidden' || adTest.offsetHeight === 0 || adTest.offsetWidth === 0) {
                         return true;
                     }
-                    
-                    // Run additional checks
-                    const [scriptResult, networkResult, cssResult] = await Promise.all([
-                        detectionMethods.scriptDetection(),
-                        detectionMethods.networkDetection(),
-                        detectionMethods.cssDetection()
-                    ]);
-                    
-                    results.script = scriptResult;
-                    results.network = networkResult;
-                    results.css = cssResult;
-                    
-                    // Consider adblock detected if any 2 methods return true
-                    const trueCount = Object.values(results).filter(v => v === true).length;
-                    return trueCount >= 2;
-                    
-                } catch (error) {
-                    console.log('Detection error:', error);
+                } catch(e) {
+                    return true;
+                }
+                return false;
+            }
+            
+            // Detection Method 2: Fetch Test (catches DNS/VPN/Network blockers)
+            function checkNetworkBlock() {
+                try {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('HEAD', 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', false);
+                    xhr.timeout = 1500;
+                    xhr.send();
                     return false;
+                } catch(e) {
+                    return true;
                 }
             }
             
-            // Show adblock warning modal
-            function showAdblockWarning() {
-                if (document.getElementById('advancedAdBlockModal')) return;
-                
-                const modalHTML = `
-                    <div id="advancedAdBlockModal" style="
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: rgba(0, 0, 0, 0.95);
-                        z-index: 99999;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        backdrop-filter: blur(15px);
-                    ">
-                        <div style="
-                            background: rgba(12, 10, 26, 0.98);
-                            border: 2px solid #ff4d4d;
-                            box-shadow: 0 0 40px rgba(255, 77, 77, 0.5), 0 0 80px rgba(255, 77, 77, 0.2);
-                            border-radius: 25px;
-                            padding: 30px 25px;
-                            width: 90%;
-                            max-width: 480px;
-                            text-align: center;
-                            animation: adblockPulse 3s infinite;
-                        ">
-                            <i class="fa-solid fa-shield-virus" style="
-                                font-size: 55px;
-                                color: #ff4d4d;
-                                margin-bottom: 15px;
-                                text-shadow: 0 0 20px #ff4d4d;
-                                animation: adblockBlink 1.5s infinite;
-                            "></i>
-                            <h3 style="
-                                color: #ff4d4d;
-                                font-family: 'Orbitron', sans-serif;
-                                font-size: 1.4rem;
-                                margin-bottom: 15px;
-                            ">⚠️ অ্যাড ব্লকার ডিটেক্টেড!</h3>
-                            <div style="
-                                background: rgba(255, 77, 77, 0.1);
-                                border: 1px solid rgba(255, 77, 77, 0.3);
-                                border-radius: 12px;
-                                padding: 15px;
-                                margin: 15px 0;
-                                text-align: left;
-                                font-size: 0.9rem;
-                                color: #ddd;
-                                line-height: 1.6;
-                            ">
-                                <p style="margin-bottom: 10px; color: #ff6b6b; font-weight: 700;">
-                                    <i class="fa-solid fa-circle-exclamation"></i> আপনার ব্রাউজারে অ্যাড ব্লকার সক্রিয় আছে!
-                                </p>
-                                <p style="margin-bottom: 12px;">ফ্রি ডায়মন্ড পেতে আমাদের স্পনসর অ্যাড দেখতে হবে। দয়া করে:</p>
-                                <ul style="list-style: none; padding: 0;">
-                                    <li style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;">
-                                        <i class="fa-solid fa-circle-right" style="color: #ff4d4d; margin-top: 4px;"></i>
-                                        <span><b>অ্যাড ব্লকার এক্সটেনশন</b> বন্ধ করুন</span>
-                                    </li>
-                                    <li style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;">
-                                        <i class="fa-solid fa-circle-right" style="color: #ff4d4d; margin-top: 4px;"></i>
-                                        <span><b>ভিপিএন</b> থাকলে তা ডিজেবল করুন</span>
-                                    </li>
-                                    <li style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;">
-                                        <i class="fa-solid fa-circle-right" style="color: #ff4d4d; margin-top: 4px;"></i>
-                                        <span><b>ব্রাউজার সেটিংস</b> থেকে বিল্ট-ইন অ্যাড ব্লকার বন্ধ করুন</span>
-                                    </li>
-                                    <li style="display: flex; align-items: flex-start; gap: 8px;">
-                                        <i class="fa-solid fa-circle-right" style="color: #ff4d4d; margin-top: 4px;"></i>
-                                        <span>তারপর নিচের <b style="color: #ff4d4d;">Refresh</b> বাটনে ক্লিক করুন</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            
-                            <div id="detectionStatus" style="
-                                background: rgba(255, 153, 0, 0.15);
-                                border: 1px solid rgba(255, 153, 0, 0.3);
-                                border-radius: 8px;
-                                padding: 8px 15px;
-                                margin: 10px 0;
-                                font-size: 0.8rem;
-                                color: #ff9900;
-                            ">
-                                <i class="fa-solid fa-spinner fa-spin"></i> রিয়েল-টাইম মনিটরিং সক্রিয়...
-                            </div>
-                            
-                            <button onclick="location.reload()" style="
-                                width: 100%;
-                                padding: 14px;
-                                border: none;
-                                border-radius: 30px;
-                                background: linear-gradient(45deg, #ff4d4d, #ff0055);
-                                color: #fff;
-                                font-weight: 700;
-                                font-size: 1rem;
-                                cursor: pointer;
-                                box-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
-                                transition: 0.3s;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-top: 15px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 10px;
-                            ">
-                                <i class="fa-solid fa-rotate-right"></i> আমি বন্ধ করেছি (Refresh)
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <style>
-                        @keyframes adblockPulse {
-                            0%, 100% { border-color: rgba(255, 77, 77, 0.8); box-shadow: 0 0 20px rgba(255, 77, 77, 0.3); }
-                            50% { border-color: rgba(255, 0, 85, 0.9); box-shadow: 0 0 50px rgba(255, 0, 85, 0.6); }
-                        }
-                        @keyframes adblockBlink {
-                            0%, 100% { opacity: 1; transform: scale(1); }
-                            50% { opacity: 0.5; transform: scale(1.1); }
-                        }
-                    </style>
-                `;
-                
-                document.body.insertAdjacentHTML('beforeend', modalHTML);
-                document.body.style.overflow = 'hidden';
-            }
-            
-            // Remove warning if adblock is disabled
-            function removeAdblockWarning() {
-                const modal = document.getElementById('advancedAdBlockModal');
-                if (modal) {
-                    modal.remove();
-                    document.body.style.overflow = '';
+            // Detection Method 3: Check for known adblock global variables
+            function checkGlobalVariables() {
+                var indicators = ['blockAdBlock', 'canRunAds', 'adBlock', 'adblock', '__adblocker'];
+                for (var i = 0; i < indicators.length; i++) {
+                    if (typeof window[indicators[i]] !== 'undefined') return true;
                 }
+                return false;
             }
             
-            // Main monitoring function
-            async function monitorAdBlocker() {
-                if (adBlockerDetected) return;
+            // Main detection function
+            function detectAdBlocker() {
+                var blocked = false;
                 
-                const isDetected = await runDetection();
+                // Method 1: Bait element
+                if (checkBaitElement()) blocked = true;
                 
-                if (isDetected) {
-                    if (!adBlockerDetected) {
-                        adBlockerDetected = true;
-                        showAdblockWarning();
+                // Method 2: Global variables
+                if (!blocked && checkGlobalVariables()) blocked = true;
+                
+                // Method 3: Network check (only run if not already blocked)
+                if (!blocked && checkNetworkBlock()) blocked = true;
+                
+                // Show/hide modal
+                if (blocked) {
+                    if (adBlockModal && !adBlockModal.classList.contains('active')) {
+                        adBlockModal.classList.add('active');
+                        document.body.classList.add('modal-open');
                     }
                 } else {
-                    if (adBlockerDetected) {
-                        adBlockerDetected = false;
-                        removeAdblockWarning();
+                    if (adBlockModal && adBlockModal.classList.contains('active')) {
+                        adBlockModal.classList.remove('active');
+                        if (!document.querySelector('.modal-overlay.active')) {
+                            document.body.classList.remove('modal-open');
+                        }
                     }
                 }
                 
-                // Update status if modal is open
-                const statusEl = document.getElementById('detectionStatus');
-                if (statusEl) {
-                    if (isDetected) {
-                        statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color: #ff4d4d;"></i> অ্যাড ব্লকার এখনও সক্রিয়!';
-                    } else {
-                        statusEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #00ff41;"></i> অ্যাড ব্লকার বন্ধ হয়েছে!';
-                    }
-                }
+                return blocked;
             }
             
-            // Start continuous monitoring
-            function startMonitoring() {
-                // Initial check
-                monitorAdBlocker();
-                
-                // Continuous monitoring every 2 seconds
-                setInterval(monitorAdBlocker, 2000);
-                
-                // Also check on visibility change (when user switches tabs)
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        monitorAdBlocker();
-                    }
-                });
-            }
+            // Run detection EVERY 1 SECOND (1000ms) for real-time monitoring
+            setInterval(detectAdBlocker, 1000);
             
-            // Start when page loads
+            // Also run immediately on page load
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', startMonitoring);
+                document.addEventListener('DOMContentLoaded', detectAdBlocker);
             } else {
-                startMonitoring();
+                detectAdBlocker();
             }
             
-            // Expose detection function globally
-            window.checkAdBlocker = monitorAdBlocker;
+            // Re-check when user comes back to this tab
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    detectAdBlocker();
+                }
+            });
             
         })();
-        // ===== END OF ADVANCED AD BLOCKER DETECTION SYSTEM =====
+        // ===== END OF ULTIMATE ADBLOCKER DETECTION =====
 
     </script>
 
